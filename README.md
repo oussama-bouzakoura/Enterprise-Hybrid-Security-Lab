@@ -1,3 +1,18 @@
+## Current Status
+
+Current milestone:
+
+**Lab 03 – Active Directory Design**
+
+Completed milestones:
+
+- ✅ Repository initialization
+- ✅ Enterprise architecture planning
+- ✅ Windows Server 2022 deployment
+- ✅ EHSL-DC01 baseline completed
+- ✅ Baseline snapshot created
+
+
 ## Repository Structure
 
 ```text
