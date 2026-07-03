@@ -109,3 +109,12 @@ Through this project I aim to:
 - Implement security controls following industry best practices.
 - Build a professional GitHub portfolio that demonstrates practical engineering skills.
 
+## Current Progress
+
+Phase 0 has been successfully completed.
+
+The initial enterprise architecture has been documented and the first infrastructure component (EHSL-DC01) has been deployed and validated.
+
+The project is now ready to begin identity services implementation through Active Directory.
+
+
