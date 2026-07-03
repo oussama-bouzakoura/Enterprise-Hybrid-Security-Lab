@@ -14,13 +14,15 @@ This document tracks all virtual machines that compose the EHSL infrastructure.
 
 EHSL-DC01 has completed its initial baseline and is ready for Active Directory deployment.
 
-Current configuration:
-
-- 2 vCPU
-- 4 GB RAM
-- 50 GB Dynamic VDI
-- Host-Only Adapter
-- NAT Adapter
-- Guest Additions Installed
-- Baseline Snapshot Created
-requirements in environments of this size.
+| Property | Value |
+|----------|-------|
+| Hostname | EHSL-DC01 |
+| Operating System | Windows Server 2022 Standard Evaluation (Desktop Experience) |
+| Role | Future Domain Controller |
+| vCPU | 2 |
+| Memory | 4096 MB |
+| Disk | 50 GB Dynamic VDI |
+| Network Adapter 1 | Host-Only Adapter - 10.10.10.10 |
+| Network Adapter 2 | NAT |
+| Snapshot | EHSL-DC01 - Baseline |
+| Status | Deployed / Baseline Completed |
