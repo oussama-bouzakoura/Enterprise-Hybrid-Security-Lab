@@ -1,29 +1,26 @@
-# VM Specifications
+# Server Inventory
 
-## EHSL-DC01
+This document tracks all virtual machines that compose the EHSL infrastructure.
 
-| Property | Value |
-|----------|------|
-| Hostname | EHSL-DC01 |
-| Operating System | Windows Server 2022 Standard Evaluation |
-| Role | Domain Controller |
-| vCPU | 2 |
-| Memory | 4096 MB |
-| Disk | 50 GB (Dynamic) |
-| Network | Servers |
-| IP Address | 10.10.20.10 |
-| Status | Planned |
+| Hostname | Operating System | Role | IP Address | Status |
+|----------|-----------------|------|------------|--------|
+| EHSL-DC01 | Windows Server 2022 Standard (Desktop Experience) | Future Domain Controller | 10.10.10.10 | Deployed |
+| EHSL-LNX01 | Ubuntu Server 24.04 LTS | Linux Infrastructure Services | 10.10.20.20 | Planned |
+| WIN11-CLIENT01 | Windows 11 | Corporate Workstation | 10.10.30.10 | Planned |
 
 ---
 
-## Justification
+## Notes
 
-EHSL-DC01 is the first server deployed in the infrastructure.
+EHSL-DC01 has completed its initial baseline and is ready for Active Directory deployment.
 
-It will later provide:
+Current configuration:
 
-- Active Directory
-- DNS
-- Group Policy
-
-The server has been intentionally sized with moderate resources because Domain Controllers have relatively low hardware requirements in environments of this size.
+- 2 vCPU
+- 4 GB RAM
+- 50 GB Dynamic VDI
+- Host-Only Adapter
+- NAT Adapter
+- Guest Additions Installed
+- Baseline Snapshot Created
+requirements in environments of this size.
