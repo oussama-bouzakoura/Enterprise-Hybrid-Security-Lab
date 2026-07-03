@@ -8,6 +8,21 @@ This document tracks all virtual machines that compose the EHSL infrastructure.
 | EHSL-LNX01 | Ubuntu Server 24.04 LTS | Linux Infrastructure Services | 10.10.20.20 | Planned |
 | WIN11-CLIENT01 | Windows 11 | Corporate Workstation | 10.10.30.10 | Planned |
 
+## Notes
+
+EHSL-DC01 has completed its initial baseline and is ready for Active Directory deployment.
+
+Baseline completed:
+
+- Windows Server installed
+- Static IP configured
+- Host-Only network configured
+- NAT adapter added for Internet access
+- Windows Updates completed
+- Guest Additions installed and validated
+- Baseline snapshot created
+
+  
 ---
 
 ## Future Servers
