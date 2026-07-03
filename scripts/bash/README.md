@@ -1,1 +1,3 @@
-This folder will store bash scripts.
+# Bash
+
+Bash scripts used for Linux administration, automation and monitoring.
