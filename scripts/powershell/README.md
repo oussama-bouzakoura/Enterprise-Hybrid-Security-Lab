@@ -1,1 +1,3 @@
-This folder will store powershell scripts.
+# PowerShell
+
+PowerShell scripts for Windows administration, Active Directory, Microsoft infrastructure and automation.
