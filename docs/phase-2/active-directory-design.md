@@ -33,7 +33,6 @@ Infrastructure objects such as servers, groups, service accounts and privileged 
 # Initial OU Structure
 
 EHSL
-
 ├── Users
 │   ├── IT
 │   ├── Security
