@@ -32,6 +32,7 @@ Infrastructure objects such as servers, groups, service accounts and privileged 
 
 # Initial OU Structure
 
+```text
 EHSL
 ├── Users
 │   ├── IT
@@ -41,14 +42,15 @@ EHSL
 │   ├── Sales
 │   └── Engineering
 │
-Workstations
-├── Standard
-├── IT
-├── Kiosk
-├── Developers
-└── Testing
+├── Workstations
+│   ├── Standard
+│   ├── IT
+│   ├── Kiosk
+│   ├── Developers
+│   └── Testing
 │
 ├── Servers
 ├── Groups
 ├── Service Accounts
 └── Admin Accounts
+```
