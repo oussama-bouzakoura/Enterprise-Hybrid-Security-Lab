@@ -1,102 +1,245 @@
 # Enterprise Hybrid Security Lab (EHSL)
 
-## Overview
+> A realistic enterprise infrastructure and security lab designed to simulate the architecture, operational practices and security controls found in modern corporate environments.
 
-The Enterprise Hybrid Security Lab (EHSL) is a long-term project focused on designing, deploying, securing and documenting a realistic enterprise IT infrastructure.
+---
 
-Rather than being a traditional homelab, this project aims to simulate the environment of a medium-sized company using Windows, Linux and Microsoft cloud technologies while following industry best practices for infrastructure, cybersecurity and security engineering.
+## Project Vision
 
-The project is developed as a professional portfolio to demonstrate practical skills in systems administration, networking, security engineering, automation and infrastructure design.
+Enterprise Hybrid Security Lab (EHSL) is not intended to be a traditional homelab.
+
+Its objective is to build a realistic enterprise environment following industry best practices, documenting not only the implementation of technologies but also the architectural decisions behind them.
+
+The project focuses on infrastructure engineering, Microsoft enterprise technologies, system administration, automation and defensive security.
+
+Every implementation is designed, validated and documented as if it were deployed inside a production environment.
 
 ---
 
 ## Objectives
 
-The main goals of this project are:
-
-- Build a hybrid Windows and Linux enterprise environment.
-- Learn Active Directory and identity management.
-- Develop infrastructure automation using PowerShell, Python and Bash.
-- Improve networking knowledge and enterprise architecture.
-- Implement security controls following industry best practices.
-- Integrate Microsoft cloud services.
-- Document every implementation phase professionally.
+- Design a scalable Active Directory infrastructure
+- Build a hybrid enterprise environment
+- Implement Microsoft security best practices
+- Automate administrative tasks using PowerShell
+- Deploy enterprise security controls
+- Document engineering decisions and implementation rationale
+- Develop a professional infrastructure portfolio
 
 ---
 
-## Technologies
+# Current Project Status
 
-Current technologies planned for the project include:
+## Core Infrastructure
 
-- Windows Server
+| Component | Status |
+|-----------|:------:|
+| GitHub Repository | ✅ |
+| Project Documentation | ✅ |
+| Windows Server 2022 | ✅ |
+| Active Directory Domain Services | ✅ |
+| DNS | ✅ |
+| Enterprise Domain | ✅ |
+| Domain Controller (EHSL-DC01) | ✅ |
+| Windows 11 Client | ✅ |
+| Domain Join | ✅ |
+
+---
+
+## Identity Management
+
+| Component | Status |
+|-----------|:------:|
+| Enterprise OU Structure | ✅ |
+| Security Groups | ✅ |
+| Administrative Accounts | ✅ |
+| Standard Users | ✅ |
+| Naming Convention | ✅ |
+
+---
+
+## Group Policy
+
+| Component | Status |
+|-----------|:------:|
+| Workstation Baseline | ✅ |
+| AutoPlay Hardening | ✅ |
+| AutoRun Hardening | ✅ |
+
+---
+
+## Validation
+
+The following components have been successfully validated.
+
+- Active Directory deployment
+- DNS functionality
+- Domain join
+- SYSVOL replication
+- Group Policy deployment
+- Administrative account model
+- Enterprise OU design
+
+---
+
+# Current Architecture
+
+```
+EHSL
+│
+├── Users
+│   ├── IT
+│   ├── Security
+│   ├── HR
+│   ├── Finance
+│   ├── Sales
+│   └── Engineering
+│
+├── Workstations
+│   ├── Standard
+│   ├── IT
+│   ├── Developers
+│   ├── Kiosk
+│   └── Testing
+│
+├── Servers
+├── Groups
+├── Service Accounts
+└── Admin Accounts
+```
+
+---
+
+# Engineering Decisions
+
+The project documents not only implementations, but also the reasoning behind each architectural decision.
+
+| Decision | Documentation |
+|----------|---------------|
+| Active Directory Design | docs/phase-2 |
+| OU Structure | docs/phase-2 |
+| Administrative Account Strategy | docs/phase-2 |
+| Group Strategy (AGDLP) | docs/phase-2 |
+| Workstation Baseline GPO | docs/phase-3/workstation-gpo-baseline.md |
+
+---
+
+# Repository Structure
+
+```
+Enterprise-Hybrid-Security-Lab
+│
+├── configs/
+├── docs/
+│   ├── phase-0/
+│   ├── phase-1/
+│   ├── phase-2/
+│   ├── phase-3/
+│   └── standards/
+│
+├── journal/
+├── scripts/
+├── phases/
+├── LICENSE
+└── README.md
+```
+
+---
+
+# Technology Stack
+
+## Infrastructure
+
+- Windows Server 2022
 - Windows 11
-- Ubuntu Server
 - Active Directory
 - DNS
 - Group Policy
-- Microsoft Entra ID
-- Microsoft Defender
-- PowerShell
-- Python
-- Bash
-- Docker
-- Git & GitHub
-- VirtualBox
 
-Additional technologies will be introduced as the project evolves.
+## Administration
+
+- PowerShell
+- Windows Administration Tools
+- RSAT
+
+## Security
+
+- Microsoft Security Baselines
+- Windows Defender
+- Group Policy Hardening
 
 ---
 
-## Current Status
+# Roadmap
 
-Current milestone:
+## Phase 1
 
-**Lab 03 – Active Directory Design**
+- Repository
+- Documentation
+- Lab planning
 
-Completed milestones:
+✅ Completed
 
-- ✅ Repository initialization
-- ✅ Enterprise architecture planning
-- ✅ Windows Server 2022 deployment
-- ✅ EHSL-DC01 baseline completed
-- ✅ Baseline snapshot created
+---
 
+## Phase 2
 
-## Repository Structure
+- Active Directory
+- DNS
+- Enterprise structure
+- Administrative model
 
-```text
-Enterprise-Hybrid-Security-Lab
-│
-├── README.md
-│
-├── docs/
-│   └── phase-0/
-│       ├── phase-0-architecture.md
-│       ├── network-design.md
-│       └── server-inventory.md
-│
-├── diagrams/
-│   └── README.md
-│
-├── configs/
-│   └── README.md
-│
-├── scripts/
-│   ├── README.md
-│   ├── python/
-│   │   └── README.md
-│   ├── powershell/
-│   │   └── README.md
-│   └── bash/
-│       └── README.md
-│
-├── journal/
-│   ├── README.md
-│   └── session-001.md
-│
-├── phases/
-│   └── README.md
-│
-└── assets/
-    └── README.md
-```
+✅ Completed
+
+---
+
+## Phase 3
+
+- Group Policy
+- Workstation baseline
+- Security hardening
+
+🟡 In Progress
+
+---
+
+## Upcoming Phases
+
+- DHCP
+- File Server
+- DFS
+- PKI
+- WSUS
+- LAPS
+- BitLocker
+- Windows Event Forwarding
+- Defender for Endpoint
+- Microsoft Intune
+- Microsoft Entra ID
+- Microsoft Sentinel integration
+- Automation with PowerShell
+- Infrastructure monitoring
+
+---
+
+# Project Methodology
+
+Every implementation follows the same engineering workflow:
+
+1. Design
+2. Implementation
+3. Validation
+4. Documentation
+5. Version Control
+
+This ensures that every change is reproducible, validated and properly documented.
+
+---
+
+# Author
+
+**Oussama Bouzakoura**
+
+Infrastructure • Systems • Security Engineering
+
+This project is continuously evolving as new enterprise technologies are implemented and documented.
