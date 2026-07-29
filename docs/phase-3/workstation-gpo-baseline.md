@@ -23,20 +23,18 @@ The baseline applies to every workstation under this Organizational Unit through
 
 Device-specific configurations will be implemented in dedicated child OUs using additional GPOs.
 
-Example:
+The GPO is linked at the parent Workstations OU so that its settings are inherited by every child workstation category.
 
-```
-Workstations
-│
-├── EHSL - Workstation Baseline
-│
-├── Standard
-├── IT
-├── Developers
-├── Kiosk
-└── Testing
-```
-
+```text
+EHSL - Workstation Baseline
+          │
+          └── Linked to OU=Workstations
+                         │
+                         ├── Standard
+                         ├── IT
+                         ├── Developers
+                         ├── Kiosk
+                         └── Testing
 ---
 
 ## Design Principles
