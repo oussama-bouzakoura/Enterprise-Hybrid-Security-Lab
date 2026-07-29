@@ -116,13 +116,12 @@ The project documents not only implementations, but also the reasoning behind ea
 
 | Decision | Documentation |
 |----------|---------------|
-| Active Directory Design | docs/phase-2 |
-| OU Structure | docs/phase-2 |
-| Administrative Account Strategy | docs/phase-2 |
-| Group Strategy (AGDLP) | docs/phase-2 |
-| Workstation Baseline GPO | docs/phase-3/workstation-gpo-baseline.md |
+| Active Directory Design | [Phase 2 documentation](docs/phase-2/) |
+| OU Structure | [Phase 2 documentation](docs/phase-2/) |
+| Administrative Account Strategy | [Phase 2 documentation](docs/phase-2/) |
+| Group Strategy (AGDLP) | [Phase 2 documentation](docs/phase-2/) |
+| Workstation Baseline GPO | [Workstation GPO Baseline](docs/phase-3/workstation-gpo-baseline.md) |
 
----
 
 # Repository Structure
 
@@ -140,7 +139,6 @@ Enterprise-Hybrid-Security-Lab
 ├── journal/
 ├── scripts/
 ├── phases/
-├── LICENSE
 └── README.md
 ```
 
@@ -164,10 +162,16 @@ Enterprise-Hybrid-Security-Lab
 
 ## Security
 
-- Microsoft Security Baselines
-- Windows Defender
-- Group Policy Hardening
+Currently implemented:
 
+- Group Policy hardening
+- AutoPlay and AutoRun restrictions
+
+Planned:
+
+- Microsoft Security Baselines
+- Microsoft Defender
+- Windows Firewall hardening
 ---
 
 # Roadmap
