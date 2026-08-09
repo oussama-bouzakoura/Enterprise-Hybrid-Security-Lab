@@ -43,6 +43,8 @@ Every implementation is designed, validated and documented as if it were deploye
 | Domain Controller (EHSL-DC01) | ✅ |
 | Windows 11 Client | ✅ |
 | Domain Join | ✅ |
+| DHCP Server | ✅ |
+| Workstation DHCP Scope | ✅ |
 
 ---
 
@@ -79,6 +81,8 @@ The following components have been successfully validated.
 - Group Policy deployment
 - Administrative account model
 - Enterprise OU design
+- DHCP address assignment
+- Internal DNS registration for multihomed Domain Controller
 
 ---
 
@@ -121,6 +125,7 @@ The project documents not only implementations, but also the reasoning behind ea
 | Administrative Account Strategy | [Phase 2 documentation](docs/phase-2/) |
 | Group Strategy (AGDLP) | [Phase 2 documentation](docs/phase-2/) |
 | Workstation Baseline GPO | [Workstation GPO Baseline](docs/phase-3/workstation-gpo-baseline.md) |
+| DHCP Scope and Network Services | [DHCP Deployment](docs/phase-4/dhcp-deployment.md) |
 
 
 # Repository Structure
@@ -134,6 +139,7 @@ Enterprise-Hybrid-Security-Lab
 │   ├── phase-1/
 │   ├── phase-2/
 │   ├── phase-3/
+│   ├── phase-4/
 │   └── standards/
 │
 ├── journal/
@@ -153,6 +159,7 @@ Enterprise-Hybrid-Security-Lab
 - Active Directory
 - DNS
 - Group Policy
+- DHCP
 
 ## Administration
 
@@ -209,15 +216,10 @@ Planned:
 
 ## Phase 4 — Network Services
 
-Deployment and configuration of core network services supporting the EHSL environment.
-
-- [DHCP Deployment](phase-4/dhcp-deployment.md)
-  - Centralized IPv4 address assignment
-  - Active Directory DHCP authorization
-  - Workstation DHCP scope
-  - Internal DNS distribution
-  - Multihomed Domain Controller DNS considerations
-  - Client lease and DNS validation
+- DHCP Server
+- Workstation DHCP scope
+- DHCP/DNS integration
+- Network services validation
 
 ✅ Completed
 
