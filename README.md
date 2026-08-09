@@ -203,13 +203,26 @@ Planned:
 - Workstation baseline
 - Security hardening
 
-🟡 In Progress
+✅ Completed
 
 ---
 
+## Phase 4 — Network Services
+
+Deployment and configuration of core network services supporting the EHSL environment.
+
+- [DHCP Deployment](phase-4/dhcp-deployment.md)
+  - Centralized IPv4 address assignment
+  - Active Directory DHCP authorization
+  - Workstation DHCP scope
+  - Internal DNS distribution
+  - Multihomed Domain Controller DNS considerations
+  - Client lease and DNS validation
+
+✅ Completed
+
 ## Upcoming Phases
 
-- DHCP
 - File Server
 - DFS
 - PKI
