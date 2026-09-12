@@ -23,8 +23,10 @@ Every implementation is designed, validated and documented as if it were deploye
 - Implement Microsoft security best practices
 - Automate administrative tasks using PowerShell
 - Deploy enterprise security controls
+- Implement scalable identity and access management
+- Centralize security telemetry
 - Document engineering decisions and implementation rationale
-- Develop a professional infrastructure portfolio
+- Develop a professional infrastructure and security portfolio
 
 ---
 
@@ -33,106 +35,181 @@ Every implementation is designed, validated and documented as if it were deploye
 ## Core Infrastructure
 
 | Component | Status |
-|-----------|:------:|
+|---|:---:|
 | GitHub Repository | ✅ |
-| Project Documentation | ✅ |
 | Windows Server 2022 | ✅ |
+| Windows 11 Client | ✅ |
 | Active Directory Domain Services | ✅ |
 | DNS | ✅ |
+| DHCP | ✅ |
 | Enterprise Domain | ✅ |
-| Domain Controller (EHSL-DC01) | ✅ |
-| Windows 11 Client | ✅ |
+| Domain Controller - EHSL-DC01 | ✅ |
+| File Server - EHSL-FS01 | ✅ |
 | Domain Join | ✅ |
-| DHCP Server | ✅ |
-| Workstation DHCP Scope | ✅ |
+| DHCP Address Management | ✅ |
 
----
-
-## Identity Management
+## Identity and Access Management
 
 | Component | Status |
-|-----------|:------:|
+|---|:---:|
 | Enterprise OU Structure | ✅ |
 | Security Groups | ✅ |
 | Administrative Accounts | ✅ |
 | Standard Users | ✅ |
 | Naming Convention | ✅ |
+| AGDLP Authorization Model | ✅ |
+| Resource-specific Access Groups | ✅ |
+| SMB Access Control | ✅ |
+| NTFS Access Control | ✅ |
 
----
-
-## Group Policy
+## Group Policy and Hardening
 
 | Component | Status |
-|-----------|:------:|
+|---|:---:|
 | Workstation Baseline | ✅ |
+| Member Server Baseline | ✅ |
+| Domain Controller Baseline | ✅ |
 | AutoPlay Hardening | ✅ |
 | AutoRun Hardening | ✅ |
+| Advanced Audit Policy | ✅ |
+| Process Creation Auditing | ✅ |
+| Command-line Auditing | ✅ |
 
----
+## File Services
 
-## Validation
+| Component | Status |
+|---|:---:|
+| File Server Role | ✅ |
+| Departmental SMB Shares | ✅ |
+| AGDLP Permissions | ✅ |
+| NTFS Least Privilege | ✅ |
+| File System Auditing | ✅ |
+| Event ID 4663 Validation | ✅ |
 
-The following components have been successfully validated.
+## Security Monitoring
 
-- Active Directory deployment
-- DNS functionality
-- Domain join
-- SYSVOL replication
-- Group Policy deployment
-- Administrative account model
-- Enterprise OU design
-- DHCP address assignment
-- Internal DNS registration for multihomed Domain Controller
+| Component | Status |
+|---|:---:|
+| Advanced Windows Auditing | ✅ |
+| Windows Event Collector | ✅ |
+| Source-initiated WEF Subscription | ✅ |
+| WEF Group Policy | ✅ |
+| Source Registration | ✅ |
+| End-to-end Security Event Forwarding | 🚧 |
+
+Current troubleshooting is focused on Security log forwarding error `5004`.
 
 ---
 
 # Current Architecture
 
+```text
+                       EHSL.INTERNAL
+                            |
+                       EHSL-DC01
+                  AD DS / DNS / DHCP
+                   GPO / WEC Collector
+                            |
+              +-------------+-------------+
+              |                           |
+         EHSL-FS01                  EHSL-CLIENT01
+     Windows Server 2022             Windows 11 Pro
+       File Services               Domain Workstation
+       SMB / NTFS
+      File Auditing
 ```
+
+Internal addressing currently includes:
+
+```text
+EHSL-DC01      10.10.10.10     Static
+EHSL-FS01      10.10.10.20     DHCP Reservation
+EHSL-CLIENT01  DHCP            Workstation Scope
+```
+
+Active Directory structure:
+
+```text
 EHSL
-│
-├── Users
-│   ├── IT
-│   ├── Security
-│   ├── HR
-│   ├── Finance
-│   ├── Sales
-│   └── Engineering
-│
-├── Workstations
-│   ├── Standard
-│   ├── IT
-│   ├── Developers
-│   ├── Kiosk
-│   └── Testing
-│
-├── Servers
+├── Admin Accounts
 ├── Groups
+├── Servers
 ├── Service Accounts
-└── Admin Accounts
+├── Users
+│   ├── Engineering
+│   ├── Finance
+│   ├── HR
+│   ├── IT
+│   ├── Sales
+│   └── Security
+└── Workstations
+    ├── Developers
+    ├── IT
+    ├── Kiosk
+    ├── Standard
+    └── Testing
+```
+
+---
+
+# Security Architecture
+
+## Identity and Authorization
+
+File access follows the AGDLP model:
+
+```text
+Accounts
+   ↓
+Global Groups
+   ↓
+Domain Local Groups
+   ↓
+NTFS Permissions
+```
+
+This separates user identity from resource authorization and avoids assigning file permissions directly to individual users.
+
+## Windows Security Telemetry
+
+The monitoring architecture currently being implemented is:
+
+```text
+Windows Activity
+       ↓
+Advanced Audit Policy
+       ↓
+Local Security Events
+       ↓
+Windows Event Forwarding
+       ↓
+EHSL-DC01 / WEC
+       ↓
+Forwarded Events
+       ↓
+Future SIEM / Detection Layer
 ```
 
 ---
 
 # Engineering Decisions
 
-The project documents not only implementations, but also the reasoning behind each architectural decision.
-
 | Decision | Documentation |
-|----------|---------------|
-| Active Directory Design | [Phase 2 documentation](docs/phase-2/) |
-| OU Structure | [Phase 2 documentation](docs/phase-2/) |
-| Administrative Account Strategy | [Phase 2 documentation](docs/phase-2/) |
-| Group Strategy (AGDLP) | [Phase 2 documentation](docs/phase-2/) |
-| Workstation Baseline GPO | [Workstation GPO Baseline](docs/phase-3/workstation-gpo-baseline.md) |
-| DHCP Scope and Network Services | [DHCP Deployment](docs/phase-4/dhcp-deployment.md) |
+|---|---|
+| Architecture and Network Design | [Phase 0](docs/phase-0/) |
+| Virtual Machine Specifications | [Phase 1](docs/phase-1/) |
+| Active Directory Design | [Phase 2](docs/phase-2/) |
+| Workstation Security Baseline | [Phase 3](docs/phase-3/workstation-gpo-baseline.md) |
+| DHCP and Network Services | [Phase 4](docs/phase-4/dhcp-deployment.md) |
+| File Services and AGDLP | [Phase 5](docs/phase-5/file-services-and-access-control.md) |
+| Security Monitoring and WEF | [Phase 6](docs/phase-6/security-monitoring.md) |
 
+---
 
 # Repository Structure
 
-```
+```text
 Enterprise-Hybrid-Security-Lab
-│
 ├── configs/
 ├── docs/
 │   ├── phase-0/
@@ -140,8 +217,9 @@ Enterprise-Hybrid-Security-Lab
 │   ├── phase-2/
 │   ├── phase-3/
 │   ├── phase-4/
+│   ├── phase-5/
+│   ├── phase-6/
 │   └── standards/
-│
 ├── journal/
 ├── scripts/
 ├── phases/
@@ -156,102 +234,123 @@ Enterprise-Hybrid-Security-Lab
 
 - Windows Server 2022
 - Windows 11
-- Active Directory
+- Active Directory Domain Services
 - DNS
-- Group Policy
 - DHCP
+- Group Policy
+- SMB File Services
 
-## Administration
+## Administration and Automation
 
 - PowerShell
 - Windows Administration Tools
 - RSAT
+- Git
+- GitHub
 
 ## Security
 
 Currently implemented:
 
-- Group Policy hardening
-- AutoPlay and AutoRun restrictions
+- Active Directory security groups
+- AGDLP authorization model
+- Administrative account separation
+- Workstation security baseline
+- Member Server security baseline
+- Domain Controller audit baseline
+- Advanced Audit Policy
+- Process Creation auditing
+- Command-line auditing
+- File System auditing
+- SMB and NTFS least-privilege access
+- Windows Event Collector
+- Windows Event Forwarding architecture
 
-Planned:
+Currently in progress:
 
-- Microsoft Security Baselines
-- Microsoft Defender
-- Windows Firewall hardening
+- End-to-end centralized Windows Security event forwarding
+
 ---
 
 # Roadmap
 
-## Phase 1
+## Phase 1 - Lab Foundation
 
-- Repository
-- Documentation
-- Lab planning
+Repository, documentation and infrastructure planning.
 
-✅ Completed
+**Completed**
+
+## Phase 2 - Active Directory
+
+AD DS, DNS, enterprise OU structure, users, groups and administrative model.
+
+**Completed**
+
+## Phase 3 - Group Policy and Workstation Security
+
+Workstation security baseline and initial hardening.
+
+**Completed**
+
+## Phase 4 - Network Services
+
+DHCP, address management and internal DNS integration.
+
+**Completed**
+
+## Phase 5 - File Services and Access Control
+
+File Server deployment, SMB shares, AGDLP, NTFS permissions and file system auditing.
+
+**Completed**
+
+## Phase 6 - Security Monitoring
+
+Advanced Audit Policy and centralized Windows Event Forwarding.
+
+**In Progress**
 
 ---
 
-## Phase 2
+# Future Development
 
-- Active Directory
-- DNS
-- Enterprise structure
-- Administrative model
+Planned capabilities include:
 
-✅ Completed
-
----
-
-## Phase 3
-
-- Group Policy
-- Workstation baseline
-- Security hardening
-
-✅ Completed
-
----
-
-## Phase 4 — Network Services
-
-- DHCP Server
-- Workstation DHCP scope
-- DHCP/DNS integration
-- Network services validation
-
-✅ Completed
-
-## Upcoming Phases
-
-- File Server
-- DFS
-- PKI
-- WSUS
-- LAPS
+- Microsoft LAPS
 - BitLocker
-- Windows Event Forwarding
-- Defender for Endpoint
-- Microsoft Intune
+- Windows Firewall hardening
+- PKI
+- Microsoft Defender
 - Microsoft Entra ID
-- Microsoft Sentinel integration
-- Automation with PowerShell
+- Microsoft Intune
+- Microsoft Sentinel
+- PowerShell automation
 - Infrastructure monitoring
+- Detection engineering
+
+The roadmap is intentionally iterative. Technologies are introduced when they provide architectural or security value to the environment rather than solely for portfolio coverage.
 
 ---
 
 # Project Methodology
 
-Every implementation follows the same engineering workflow:
+Every major implementation follows the same engineering workflow:
 
-1. Design
-2. Implementation
-3. Validation
-4. Documentation
-5. Version Control
+```text
+Design
+  ↓
+Implementation
+  ↓
+Troubleshooting
+  ↓
+Validation
+  ↓
+Documentation
+  ↓
+Version Control
+```
 
-This ensures that every change is reproducible, validated and properly documented.
+The objective is not only to make the technology work, but to understand and document why each component exists, how it is secured and how it is validated.
 
 ---
 
