@@ -1,509 +1,707 @@
-# Phase 6 - Security Monitoring
+@'
+# Phase 6 - Security Monitoring and Windows Event Forwarding
 
-## Objective
+## 1. Purpose
 
-Establish a Windows security telemetry foundation by implementing Advanced Audit Policy and centralized Windows Event Forwarding (WEF).
+Phase 6 introduces centralized Windows security monitoring into the Enterprise Hybrid Security Lab (EHSL).
 
-The objective is to improve visibility across domain controllers, member servers and workstations while preparing the environment for future SIEM integration.
+The objective is to move from security controls that generate local audit events to an architecture in which relevant events from multiple systems are collected centrally.
 
----
+The implementation uses native Windows technologies:
 
-## Audit Policy Architecture
+- Advanced Audit Policy
+- Windows Security Event Log
+- Windows Event Forwarding (WEF)
+- Windows Event Collector (WEC)
 
-EHSL uses separate security baselines for different system roles rather than placing all audit configuration in the default domain policies.
-
-The following GPOs are used:
-
-```text
-EHSL - Workstation Baseline
-EHSL - Member Servers Baseline
-EHSL - Domain Controllers Baseline
-```
-
-This allows audit requirements to be adapted to the role and security relevance of each system.
-
-The following setting is also enabled to ensure Advanced Audit Policy subcategories take precedence over legacy audit categories:
-
-```text
-Audit: Force audit policy subcategory settings
-to override audit policy category settings
-```
+This creates a centralized telemetry foundation that can later support additional detection engineering or SIEM integration.
 
 ---
 
-## Member Server Audit Baseline
+## 2. Architecture
 
-GPO:
+The current monitoring architecture uses:
 
-```text
-EHSL - Member Servers Baseline
-```
+### Collector
 
-Target:
+`EHSL-DC01`
 
-```text
-OU=Servers,OU=EHSL
-```
+EHSL-DC01 runs the Windows Event Collector service and receives forwarded events.
 
-The following Advanced Audit Policy subcategories are configured:
+### Sources
 
-| Category | Subcategory | Auditing |
-|---|---|---|
-| Account Logon | Credential Validation | Success + Failure |
-| Account Management | User Account Management | Success + Failure |
-| Account Management | Security Group Management | Success + Failure |
-| Logon/Logoff | Logon | Success + Failure |
-| Logon/Logoff | Logoff | Success |
-| Logon/Logoff | Special Logon | Success |
-| Object Access | File System | Success + Failure |
-| Policy Change | Audit Policy Change | Success + Failure |
-| Privilege Use | Sensitive Privilege Use | Success + Failure |
-| Detailed Tracking | Process Creation | Success |
-| System | Security System Extension | Success + Failure |
-| System | System Integrity | Success + Failure |
+Current WEF sources are:
 
-Process Creation auditing also includes:
+- `EHSL-FS01`
+- `EHSL-CLIENT01`
 
-```text
-Include command line in process creation events: Enabled
-```
+### Destination Log
 
-This provides additional context for Event ID `4688`.
+Forwarded events are stored on EHSL-DC01 in:
+
+`ForwardedEvents`
+
+### Subscription
+
+The production subscription is:
+
+`EHSL - Security Events`
+
+The subscription uses a source-initiated model.
 
 ---
 
-## Domain Controller Audit Baseline
+## 3. Monitoring Flow
 
-GPO:
+The implemented event flow is:
 
-```text
-EHSL - Domain Controllers Baseline
-```
+`EHSL-FS01 / EHSL-CLIENT01`
 
-Target:
+↓
 
-```text
-OU=Domain Controllers
-```
+`Windows Security Event Log`
 
-The Domain Controller baseline includes:
+↓
 
-| Category | Subcategory | Auditing |
-|---|---|---|
-| Account Logon | Credential Validation | Success + Failure |
-| Account Logon | Kerberos Authentication Service | Success + Failure |
-| Account Logon | Kerberos Service Ticket Operations | Success + Failure |
-| Account Management | User Account Management | Success + Failure |
-| Account Management | Security Group Management | Success + Failure |
-| Account Management | Computer Account Management | Success + Failure |
-| Logon/Logoff | Logon | Success + Failure |
-| Logon/Logoff | Logoff | Success |
-| Logon/Logoff | Special Logon | Success |
-| DS Access | Directory Service Changes | Success + Failure |
-| Policy Change | Audit Policy Change | Success + Failure |
-| Privilege Use | Sensitive Privilege Use | Success + Failure |
-| Detailed Tracking | Process Creation | Success |
-| System | Security System Extension | Success + Failure |
-| System | System Integrity | Success + Failure |
+`Windows Event Forwarding`
 
-Command-line information for Process Creation events is enabled.
+↓
 
-The additional Kerberos and Directory Service auditing reflects the security relevance of a Domain Controller.
+`EHSL-DC01`
+
+↓
+
+`ForwardedEvents`
+
+This architecture centralizes selected security telemetry without requiring a third-party agent.
 
 ---
 
-## Workstation Audit Baseline
+## 4. Source-Initiated Architecture
 
-The existing workstation baseline was extended with Advanced Audit Policy.
+EHSL uses source-initiated Windows Event Forwarding.
 
-Configured subcategories include:
+In this model:
 
-| Category | Subcategory | Auditing |
-|---|---|---|
-| Account Logon | Credential Validation | Success + Failure |
-| Account Management | User Account Management | Success + Failure |
-| Account Management | Security Group Management | Success + Failure |
-| Logon/Logoff | Logon | Success + Failure |
-| Logon/Logoff | Logoff | Success |
-| Logon/Logoff | Special Logon | Success |
-| Policy Change | Audit Policy Change | Success + Failure |
-| Privilege Use | Sensitive Privilege Use | Success + Failure |
-| Detailed Tracking | Process Creation | Success |
-| System | Security System Extension | Success + Failure |
-| System | System Integrity | Success + Failure |
+1. Group Policy configures domain systems with the Subscription Manager.
+2. Source systems contact EHSL-DC01.
+3. The collector determines which subscription applies.
+4. Matching events are forwarded to the collector.
+5. Events are stored in the ForwardedEvents log.
 
-Command-line information for Process Creation events is enabled.
-
-File System auditing is intentionally not enabled on workstations at this stage because centralized business data is hosted on EHSL-FS01.
+This model is suitable for centrally managed Active Directory environments because source configuration can be distributed through Group Policy.
 
 ---
 
-## Audit Policy Validation
+## 5. Windows Event Collector
 
-Audit configuration was validated using multiple layers:
+EHSL-DC01 provides the collector role.
+
+The Windows Event Collector service receives events from configured domain systems.
+
+The collector is intentionally hosted on EHSL-DC01 because of the limited resources available to the lab.
+
+In a larger production environment, event collection infrastructure could be separated from the domain controller based on:
+
+- scale;
+- security boundaries;
+- availability requirements;
+- event volume;
+- retention requirements.
+
+Within EHSL, this consolidation is an intentional lab design decision.
+
+---
+
+## 6. Group Policy
+
+Windows Event Forwarding source configuration is centrally managed using:
+
+`EHSL - Windows Event Forwarding`
+
+The policy is linked at the EHSL OU level so applicable domain systems can receive the source configuration.
+
+The WEF configuration works together with the system-specific baseline GPOs.
+
+Relevant GPOs include:
+
+- `EHSL - Windows Event Forwarding`
+- `EHSL - Workstation Baseline`
+- `EHSL - Member Servers Baseline`
+- `EHSL - Domain Controllers Baseline`
+
+The baseline policies also provide the Advanced Audit Policy settings required to generate useful security telemetry.
+
+---
+
+## 7. Advanced Audit Policy
+
+EHSL uses Advanced Audit Policy to generate security events required for monitoring and investigation.
+
+The auditing strategy includes categories relevant to:
+
+- authentication;
+- logon and logoff;
+- account management;
+- privilege use;
+- process creation;
+- Kerberos;
+- audit-policy changes;
+- object access.
+
+This provides the event source for the centralized WEF architecture.
+
+---
+
+## 8. Process Creation Auditing
+
+Process creation auditing is enabled to generate:
+
+`Event ID 4688`
+
+This event records process creation activity.
+
+EHSL also enables command-line information in process creation events.
+
+This increases visibility into execution behavior and improves the value of the telemetry for:
+
+- incident investigation;
+- suspicious process analysis;
+- PowerShell investigation;
+- malware analysis;
+- future detection engineering.
+
+Command-line event data can contain sensitive information if applications pass secrets as arguments and must therefore be treated as security-sensitive telemetry.
+
+---
+
+## 9. File Access Auditing
+
+EHSL-FS01 uses object-access auditing on business file resources.
+
+SACLs are configured on the relevant file-service folders.
+
+This allows Windows to generate:
+
+`Event ID 4663`
+
+when audited file-system objects are accessed.
+
+Phase 5 validates local file-access auditing.
+
+Phase 6 extends that capability by forwarding selected file-access telemetry to the central collector.
+
+This creates a complete monitoring path:
+
+`User access -> FS01 Security log -> WEF -> DC01 ForwardedEvents`
+
+---
+
+## 10. Production Subscription
+
+The production WEF subscription is:
+
+`EHSL - Security Events`
+
+The subscription collects selected Security log events from configured source systems.
+
+The final event selection includes:
+
+- `4624` - Successful logon
+- `4625` - Failed logon
+- `4634` - Logoff
+- `4648` - Logon using explicit credentials
+- `4672` - Special privileges assigned to new logon
+- `4688` - Process creation
+- `4720` - User account created
+- `4722` - User account enabled
+- `4725` - User account disabled
+- `4726` - User account deleted
+- `4728` - Member added to a global security group
+- `4729` - Member removed from a global security group
+- `4732` - Member added to a local security group
+- `4733` - Member removed from a local security group
+- `4740` - User account locked out
+- `4768` - Kerberos TGT requested
+- `4769` - Kerberos service ticket requested
+- `4771` - Kerberos pre-authentication failed
+- `4776` - Credential validation
+- `4663` - Object access
+- `4719` - System audit policy changed
+
+The selection is intentionally focused on events with useful security and investigative value.
+
+---
+
+## 11. Delivery Configuration
+
+The production subscription uses a low-latency delivery model.
+
+The final configuration uses:
+
+`MinLatency`
+
+with push delivery.
+
+This configuration was selected after validation during troubleshooting.
+
+Low-latency delivery is appropriate for the current lab because the event volume is limited and rapid visibility is more useful than bandwidth optimization.
+
+---
+
+# 12. Troubleshooting and Engineering Findings
+
+The WEF deployment required troubleshooting before end-to-end forwarding became operational.
+
+The issues and their resolution are preserved here because they represent important engineering findings from the implementation.
+
+---
+
+## 12.1 Initial Symptom
+
+During initial deployment, the collector recognized the configured source systems but Security events were not successfully forwarded.
+
+WEF source status reported:
+
+`LastError = 5004`
+
+This indicated that the forwarding architecture was partially functional but access to the requested event channel was failing.
+
+---
+
+## 12.2 Security Log Access Investigation
+
+The problem was isolated to access to the Windows Security log.
+
+In the implemented EHSL configuration, the forwarding service context required additional rights before Security events could be forwarded successfully.
+
+The validated configuration added:
+
+`NETWORK SERVICE`
+
+to the local:
+
+`Event Log Readers`
+
+group.
+
+This membership was deployed through Restricted Groups in the relevant baseline GPOs.
+
+---
+
+## 12.3 SeSecurityPrivilege
+
+Event Log Readers membership alone did not fully resolve the behavior in the EHSL configuration.
+
+The forwarding service context also required:
+
+`SeSecurityPrivilege`
+
+corresponding to:
+
+`Manage auditing and security log`
+
+This user right was assigned to:
+
+`NETWORK SERVICE`
+
+through Group Policy.
+
+The configuration was applied to the relevant source classes through:
+
+- `EHSL - Workstation Baseline`
+- `EHSL - Member Servers Baseline`
+
+After policy application and restart, the WEF sources reached:
+
+`Active`
+
+with:
+
+`LastError = 0`
+
+---
+
+## 12.4 Scope of the Finding
+
+The `NETWORK SERVICE` permissions described above are recorded as a finding from the implemented EHSL environment.
+
+They should not be interpreted as a universal requirement for every Windows Event Forwarding deployment.
+
+WEF behavior can depend on factors including:
+
+- operating-system version;
+- event channel;
+- subscription configuration;
+- service context;
+- Group Policy;
+- existing local security configuration.
+
+The important engineering result is that the issue was isolated, corrected, and validated in the deployed environment.
+
+---
+
+## 12.5 Apparent Forwarding Failure After Error 5004
+
+After resolving the Security-log access problem, source status showed:
+
+`Active`
+
+and:
+
+`LastError = 0`
+
+but test events still appeared not to arrive immediately.
+
+This initially suggested that another forwarding problem might remain.
+
+Further investigation showed that the issue was not source connectivity or Security-log access.
+
+---
+
+## 12.6 Delivery Latency Root Cause
+
+A temporary troubleshooting subscription:
+
+`EHSL - Security Test`
+
+was configured using a bandwidth-oriented delivery mode.
+
+The effective configuration included a delivery maximum latency of:
+
+`21600000 ms`
+
+which corresponds to approximately:
+
+`6 hours`
+
+The source was therefore healthy, but the subscription was allowed to delay event delivery significantly.
+
+This explained why:
+
+- the source appeared Active;
+- LastError was 0;
+- events did not appear promptly on the collector.
+
+---
+
+## 12.7 Delivery Mode Correction
+
+The troubleshooting subscription was changed to a low-latency delivery model.
+
+After changing the configuration to:
+
+`MinLatency`
+
+events were forwarded successfully.
+
+This confirmed that the remaining issue was delivery behavior rather than event-generation, authentication, or source connectivity.
+
+The production subscription was subsequently configured using the validated low-latency model.
+
+---
+
+## 12.8 Temporary Troubleshooting Objects
+
+The temporary subscription:
+
+`EHSL - Security Test`
+
+was removed after validation.
+
+Temporary troubleshooting artifacts were also cleaned up after the WEF pipeline was confirmed operational.
+
+The production environment therefore retains only the required operational configuration.
+
+---
+
+# 13. End-to-End Validation
+
+The final architecture was validated from both WEF source systems.
+
+---
+
+## 13.1 EHSL-CLIENT01
+
+Successful logon telemetry from EHSL-CLIENT01 was received on EHSL-DC01.
+
+This validated the path:
+
+`CLIENT01 Security Log`
+
+↓
+
+`Windows Event Forwarding`
+
+↓
+
+`DC01 ForwardedEvents`
+
+Event ID `4624` was successfully observed from the workstation source.
+
+---
+
+## 13.2 EHSL-FS01
+
+Successful logon telemetry from EHSL-FS01 was also received by the collector.
+
+Event ID `4624` confirmed successful forwarding from the member server.
+
+This demonstrated that the production subscription could collect Security events from both endpoint classes represented in the lab.
+
+---
+
+## 13.3 File Access Validation
+
+A domain user accessed the HR share on EHSL-FS01.
+
+The access generated:
+
+`Event ID 4663`
+
+on the file server.
+
+The event was subsequently received in:
+
+`ForwardedEvents`
+
+on EHSL-DC01.
+
+This validated the complete business-security monitoring path:
+
+`Domain user`
+
+↓
+
+`SMB resource on EHSL-FS01`
+
+↓
+
+`NTFS/SACL auditing`
+
+↓
+
+`Security Event 4663`
+
+↓
+
+`Windows Event Forwarding`
+
+↓
+
+`EHSL-DC01 ForwardedEvents`
+
+This is an important validation because it connects the access-control implementation from Phase 5 directly to the centralized monitoring architecture from Phase 6.
+
+---
+
+# 14. Operational Verification
+
+## Collector Service
+
+On EHSL-DC01:
 
 ```powershell
-gpresult /r /scope computer
-auditpol /get /category:*
-Get-GPOReport
+Get-Service Wecsvc
 ```
 
-`gpresult` confirms that the intended GPO reaches the computer.
-
-`auditpol` confirms the effective Advanced Audit Policy on the endpoint.
-
-`Get-GPOReport` confirms that the settings are actually stored inside the GPO.
+The Windows Event Collector service should be running.
 
 ---
 
-## Troubleshooting Finding - GPO Storage
+## Subscription Inventory
 
-During implementation, several Advanced Audit Policy settings appeared configured in the Group Policy editor but did not appear in `Get-GPOReport`.
-
-Although the GPO itself was applied, the affected audit settings were therefore not actually stored.
-
-The affected subcategories were reopened and explicitly configured using:
-
-```text
-Configure the following audit events
-Success and/or Failure
-Apply
-OK
-```
-
-Afterwards, `Get-GPOReport` correctly displayed the settings and `auditpol` confirmed their effective application.
-
-This established an important validation principle for the lab:
-
-```text
-GPO linked/applied
-        ≠
-setting necessarily stored and effective
-```
-
-Configuration should be validated at both the GPO and endpoint levels.
-
----
-
-## Process Creation Validation
-
-Process Creation auditing was successfully validated using:
-
-```text
-Event ID 4688
-```
-
-Validation on EHSL-FS01 and EHSL-DC01 confirmed that process events include full command-line information.
-
-This telemetry provides useful context for detecting suspicious command execution, PowerShell activity and other process-based behavior.
-
----
-
-# Windows Event Forwarding
-
-## Architecture
-
-Windows Event Forwarding is being introduced to centralize selected security events.
-
-Current architecture:
-
-```text
-EHSL-FS01 ───────┐
-                 │
-                 ├── WEF / WinRM / HTTP 5985
-                 │
-EHSL-CLIENT01 ───┘
-                         ↓
-                    EHSL-DC01
-                         ↓
-                  Windows Event
-                     Collector
-                         ↓
-                  Forwarded Events
-```
-
-EHSL-DC01 currently performs the Windows Event Collector role.
-
-This design is acceptable for the current lab because of resource constraints.
-
-In a production environment, the collector role should be evaluated for separation from the Domain Controller depending on scale, availability and security requirements.
-
----
-
-## Windows Event Collector
-
-The collector was initialized on EHSL-DC01 using:
+On EHSL-DC01:
 
 ```powershell
-wecutil qc
+wecutil enum-subscription
 ```
 
-Windows Event Collector is running and the `ForwardedEvents` log is available.
+The production subscription should include:
+
+`EHSL - Security Events`
 
 ---
 
-## WEF Group Policy
-
-GPO:
-
-```text
-EHSL - Windows Event Forwarding
-```
-
-The GPO is linked to:
-
-```text
-OU=EHSL
-```
-
-It therefore currently reaches EHSL member servers and workstations.
-
-The Domain Controller OU is outside this scope.
-
-The configured Subscription Manager is:
-
-```text
-Server=http://EHSL-DC01.ehsl.internal:5985/wsman/SubscriptionManager/WEC,Refresh=60
-```
-
-The configuration was verified on EHSL-CLIENT01 through:
-
-```text
-HKLM\SOFTWARE\Policies\Microsoft\Windows\EventLog\EventForwarding\SubscriptionManager
-```
-
----
-
-## Source-Initiated Subscription
-
-Subscription:
-
-```text
-EHSL - Security Events
-```
-
-Configuration:
-
-| Property | Value |
-|---|---|
-| Subscription Type | Source Initiated |
-| Destination Log | Forwarded Events |
-| Allowed Sources | Domain Computers |
-| Transport | HTTP |
-| Port | 5985 |
-| Configuration Mode | Minimize Latency |
-| Content Format | RenderedText |
-
-Source-initiated forwarding allows domain systems that match the authorization policy to register with the collector without manually defining each endpoint in the subscription.
-
----
-
-## Selected Security Events
-
-The current subscription includes the following Event IDs:
-
-```text
-4624
-4625
-4634
-4648
-4672
-4688
-4720
-4722
-4725
-4726
-4728
-4729
-4732
-4733
-4740
-4768
-4769
-4771
-4776
-4663
-4719
-```
-
-The selection focuses on authentication, privileged logons, process execution, account and group changes, Kerberos activity, file access and audit policy changes.
-
-The event selection can be refined later as the monitoring architecture evolves.
-
----
-
-## Connectivity Validation
-
-The WEF infrastructure has passed several validation layers.
-
-DNS resolution correctly directs clients to:
-
-```text
-EHSL-DC01.ehsl.internal
-10.10.10.10
-```
-
-TCP connectivity to the collector was validated using:
+## Subscription Configuration
 
 ```powershell
-Test-NetConnection EHSL-DC01.ehsl.internal -Port 5985
+wecutil get-subscription "EHSL - Security Events"
 ```
 
-WS-Management connectivity was also tested after enabling WinRM on the source system.
-
-The Subscription Manager GPO is successfully applied.
+This can be used to review the effective subscription configuration.
 
 ---
 
-## Source Registration
-
-Collector runtime status was inspected using:
+## Runtime Status
 
 ```powershell
-wecutil gr "EHSL - Security Events"
+wecutil get-subscriptionruntimestatus "EHSL - Security Events"
 ```
 
-EHSL-FS01 successfully registered with the collector and reported:
-
-```text
-RunTimeStatus: Active
-LastError: 0
-```
-
-EHSL-CLIENT01 was also successfully prepared for WEF communication after WinRM was started.
+This provides source runtime information for the subscription.
 
 ---
 
-## Current Issue - Security Event Forwarding
+## Forwarded Events
 
-End-to-end Security log forwarding is not yet operational.
+Recent forwarded events can be reviewed with:
 
-EHSL-FS01 correctly generates local Security Event ID `4663` when an authorized user accesses an audited file.
-
-Example validated activity:
-
-```text
-john.smith
-    ↓
-\\EHSL-FS01\HR
-    ↓
-File modification
-    ↓
-Event ID 4663 generated locally on EHSL-FS01
+```powershell
+Get-WinEvent -LogName ForwardedEvents -MaxEvents 20 |
+Select-Object TimeCreated, Id, MachineName
 ```
 
-However, these events are not currently appearing in:
+Specific event IDs can also be queried.
 
-```text
-EHSL-DC01
-→ Forwarded Events
+Example for successful logons:
+
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'ForwardedEvents'
+    Id      = 4624
+} -MaxEvents 20
 ```
 
-The source-side log:
+Example for file access:
 
-```text
-Microsoft-Windows-Forwarding/Operational
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'ForwardedEvents'
+    Id      = 4663
+} -MaxEvents 20
 ```
-
-reports repeated:
-
-```text
-Event ID: 102
-Level: Error
-Error code: 5004
-```
-
-with the message:
-
-```text
-The subscription EHSL - Security Events can not be created.
-The error code is 5004.
-```
-
-The next troubleshooting area identified is the permission context used by Windows Event Forwarding to access the Security event log.
-
-A remediation has not yet been validated.
-
-For this reason, no fix is documented as implemented.
 
 ---
 
-## EHSL-CLIENT01 Observation
+# 15. Monitoring Architecture Value
 
-A separate validation test attempted to generate Process Creation Event ID `4688` on EHSL-CLIENT01.
+The completed Phase 6 implementation provides EHSL with a centralized native Windows telemetry layer.
 
-At the time of testing, no matching local `4688` events were found in the Security log.
+Security activity can now be observed centrally rather than requiring manual inspection of individual systems.
 
-This is therefore treated as a separate audit-policy validation issue and not as proof of a WEF delivery failure.
+The architecture provides visibility into areas including:
 
-Further troubleshooting is pending.
+- successful authentication;
+- failed authentication;
+- privileged logons;
+- explicit credential use;
+- process execution;
+- account changes;
+- security-group membership changes;
+- account lockouts;
+- Kerberos activity;
+- file access;
+- audit-policy changes.
 
----
-
-## Current Monitoring Pipeline
-
-The intended monitoring pipeline is:
-
-```text
-Windows activity
-       ↓
-Advanced Audit Policy
-       ↓
-Local Security Event
-       ↓
-Windows Event Forwarding
-       ↓
-EHSL-DC01 / WEC
-       ↓
-Forwarded Events
-       ↓
-Future SIEM / Detection Layer
-```
-
-At the current stage, local event generation is validated on the server side while centralized Security event delivery remains under troubleshooting.
+This creates a stronger foundation for investigation and future detection engineering.
 
 ---
 
-## Phase Status
+# 16. Relationship to Future SIEM Integration
 
-**In Progress**
+Windows Event Forwarding is not treated as the final monitoring platform.
 
-Completed:
+Instead, it provides a validated Windows telemetry pipeline that can later feed additional security platforms.
 
-- Member Server Advanced Audit Policy
-- Domain Controller Advanced Audit Policy
-- Workstation Advanced Audit Policy configuration
-- Process Creation auditing validation on server/DC
-- Command-line auditing
-- File System auditing
-- WEC collector deployment
-- Source-initiated WEF subscription
-- Subscription Manager GPO
-- WinRM connectivity validation
-- Source registration
+Potential future integrations include:
 
-Pending:
+- Microsoft Sentinel;
+- Microsoft Defender security telemetry;
+- other SIEM platforms;
+- custom PowerShell analysis;
+- detection-engineering workflows.
 
-- Resolve WEF Security log error `5004`
-- Validate end-to-end Event ID `4663` forwarding
-- Revalidate Process Creation auditing on EHSL-CLIENT01
-- Validate Event ID `4688` forwarding from EHSL-CLIENT01
-- Evaluate EHSL-DC01 as a WEF source
-- Refine event collection as monitoring requirements evolve
+Those integrations are future work and are not represented as currently deployed capabilities.
 
 ---
 
-## Security Value
+# 17. Security Considerations
 
-This phase introduces the foundation for centralized defensive monitoring.
+Centralized event collection introduces several security considerations.
 
-Once completed, the architecture will provide:
+### Log Access
 
-- Centralized Windows security telemetry
-- Authentication visibility
-- Account and group change visibility
-- Process execution telemetry
-- File access monitoring
-- Kerberos security events
-- Audit policy change monitoring
-- A telemetry source suitable for future SIEM ingestion and detection engineering
+Forwarded security telemetry can contain sensitive information and should only be accessible to authorized administrators.
+
+### Command-Line Data
+
+Event ID `4688` may contain process command-line information.
+
+Secrets should never intentionally be placed in command-line arguments.
+
+### Event Volume
+
+Additional event IDs should be introduced based on monitoring value rather than collecting all available Windows events without purpose.
+
+### Collector Availability
+
+EHSL currently uses a single collector.
+
+This is acceptable for the lab but does not provide high availability.
+
+### Collector Placement
+
+EHSL-DC01 currently performs both domain-controller and collector responsibilities due to resource constraints.
+
+A larger production design should evaluate whether these functions should be separated.
+
+---
+
+# 18. Lessons Learned
+
+Phase 6 demonstrated several practical monitoring lessons.
+
+### A Healthy Source Does Not Guarantee Immediate Delivery
+
+`Active / LastError = 0` confirms important aspects of source health but does not necessarily mean an event must appear immediately.
+
+Delivery configuration must also be considered.
+
+### Permissions Matter at the Event Channel
+
+A working WinRM or WEF connection does not automatically guarantee access to every Windows event channel.
+
+### Delivery Mode Matters
+
+A bandwidth-optimized subscription can create substantial event-delivery delay while remaining technically healthy.
+
+### End-to-End Testing Is Essential
+
+The final validation did not stop at checking subscription status.
+
+Real security activity was generated and traced from source to collector.
+
+### Business Events Provide Better Validation
+
+Forwarding a real `4663` generated through access to a protected departmental share provided stronger evidence than validating only synthetic or generic events.
+
+---
+
+# 19. Phase 6 Status
+
+**Status: Completed**
+
+Validated capabilities include:
+
+- Advanced Audit Policy;
+- process creation auditing;
+- command-line process auditing;
+- Windows Event Collector on EHSL-DC01;
+- source-initiated Windows Event Forwarding;
+- EHSL-CLIENT01 forwarding;
+- EHSL-FS01 forwarding;
+- Security-log forwarding;
+- production Security event filtering;
+- low-latency delivery;
+- centralized successful-logon events;
+- centralized file-access Event ID 4663;
+- resolved Error 5004;
+- validated end-to-end event delivery.
+
+The production monitoring path is operational:
+
+`EHSL sources -> Windows Security logs -> WEF -> EHSL-DC01 -> ForwardedEvents`
+
+Phase 6 therefore provides the centralized Windows security-monitoring foundation for subsequent EHSL security work.
+'@ | Set-Content -Path ".\docs\phase-6\security-monitoring.md" -Encoding UTF8

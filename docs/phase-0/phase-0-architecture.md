@@ -1,120 +1,346 @@
-# Enterprise Hybrid Security Lab (EHSL)
+@'
+# Phase 0 - Architecture and Design
 
 ## 1. Project Vision
-The Enterprise Hybrid Security Lab (EHSL) is a long-term project designed to simulate the IT infrastructure of a modern enterprise. The goal is to design, deploy, secure, automate, and document a hybrid Windows and Linux environment following industry best practices.
 
-The project aims to strengthen practical skills in infrastructure administration, cybersecurity, networking, automation, cloud integration, and security engineering while maintaining professional documentation similar to what would be expected in a real enterprise environment.
+The Enterprise Hybrid Security Lab (EHSL) is a Microsoft-first enterprise infrastructure and security lab designed to reproduce realistic administration, identity, endpoint, monitoring, and security engineering scenarios.
 
+The project focuses on building and validating infrastructure rather than simply deploying standalone security tools.
+
+The current environment provides a foundation for:
+
+- Windows Server administration
+- Active Directory Domain Services
+- DNS and DHCP
+- Group Policy
+- enterprise access control
+- file services
+- security auditing
+- centralized Windows event collection
+- Windows LAPS
+- BitLocker
+- future endpoint and Microsoft security hardening
+
+Hybrid and cloud capabilities are part of the long-term direction of the project but are not represented as implemented capabilities unless they have been deployed and validated.
+
+---
 
 ## 2. Business Scenario
-EHSL Manufacturing Ltd. is a fictional medium-sized manufacturing company headquartered in Basel, Switzerland, with approximately 80 employees distributed across two locations.
 
-The company designs and manufactures industrial electronic components and relies heavily on its IT infrastructure to support engineering, administration, production, and remote collaboration. Due to the importance of its intellectual property and business operations, security, availability, and reliability are key priorities.
+EHSL models the infrastructure of a small-to-medium enterprise with multiple business departments and centralized IT administration.
 
-## 3. Company Overview
-The company consists of the following departments:
+The Active Directory structure currently represents:
 
-- Management
-- Human Resources
+- IT
+- Security
+- HR
+- Finance
+- Sales
+- Engineering
+
+The environment is designed to support realistic enterprise scenarios involving:
+
+- standard users;
+- privileged administrators;
+- managed workstations;
+- member servers;
+- departmental file access;
+- centralized policy enforcement;
+- credential protection;
+- security logging and investigation.
+
+The business scenario provides context for technical decisions without requiring unnecessary infrastructure purely for simulation purposes.
+
+---
+
+## 3. Design Principles
+
+The lab follows several architectural principles.
+
+### Implementation Before Documentation Claims
+
+Documentation must describe the environment that actually exists.
+
+Planned technologies are identified as roadmap items and are not presented as deployed capabilities.
+
+### Microsoft-First Infrastructure
+
+The current implementation focuses on the Microsoft enterprise ecosystem:
+
+- Windows Server
+- Windows 11
+- Active Directory
+- DNS
+- DHCP
+- Group Policy
+- Windows security controls
+- PowerShell
+
+### Least Privilege
+
+Administrative privileges and access to business data are separated wherever possible.
+
+### Centralized Management
+
+Identity, policy, addressing, permissions, security configuration, and event collection are centrally managed.
+
+### Security by Design
+
+Security controls are integrated into infrastructure deployment rather than added only after services are operational.
+
+### Validation
+
+Controls are tested through positive and negative validation wherever practical.
+
+---
+
+## 4. Current Architecture
+
+The currently implemented environment contains three virtual machines:
+
+| System | Operating System | Primary Role |
+|---|---|---|
+| EHSL-DC01 | Windows Server 2022 Standard Evaluation | AD DS, DNS, DHCP, GPO, WEC |
+| EHSL-FS01 | Windows Server 2022 Standard Evaluation | Member Server / File Server |
+| EHSL-CLIENT01 | Windows 11 Pro Education | Managed Domain Workstation |
+
+All systems are members of or provide services for:
+
+`ehsl.internal`
+
+The environment runs in Oracle VirtualBox on a Windows host.
+
+---
+
+## 5. Network Architecture
+
+The current internal network is:
+
+`10.10.10.0/24`
+
+Each VM uses:
+
+- a Host-Only adapter for the EHSL internal network;
+- a NAT adapter for outbound Internet connectivity.
+
+Current internal addressing:
+
+| Host | Address |
+|---|---:|
+| EHSL-DC01 | `10.10.10.10` |
+| EHSL-FS01 | `10.10.10.20` |
+| EHSL-CLIENT01 | DHCP, currently `10.10.10.100` |
+
+EHSL-DC01 uses a static internal address.
+
+EHSL-FS01 receives `10.10.10.20` through a DHCP reservation.
+
+EHSL-CLIENT01 receives its internal address dynamically from the EHSL DHCP scope.
+
+There are currently no VLANs, DMZs, or separate server/workstation subnets.
+
+Network segmentation remains a future architectural improvement.
+
+---
+
+## 6. Identity Architecture
+
+The Active Directory forest and domain are:
+
+`ehsl.internal`
+
+EHSL-DC01 provides the domain controller role.
+
+The EHSL Organizational Unit structure separates:
+
+- users;
+- workstations;
+- servers;
+- groups;
+- service accounts;
+- privileged administrative accounts.
+
+User OUs are further divided by business department.
+
+Workstation OUs provide additional separation for different endpoint use cases.
+
+This structure supports targeted Group Policy deployment and delegated administration.
+
+---
+
+## 7. Infrastructure Roles
+
+### EHSL-DC01
+
+EHSL-DC01 provides the central infrastructure services required by the domain.
+
+Implemented responsibilities include:
+
+- Active Directory Domain Services
+- DNS
+- DHCP
+- Group Policy infrastructure
+- Windows Event Collector
+
+It is the central control-plane system of the current lab.
+
+### EHSL-FS01
+
+EHSL-FS01 is a domain-joined member server dedicated to business file services.
+
+It hosts departmental and shared SMB resources on a separate data volume.
+
+Implemented shares include:
+
+- HR
 - Finance
 - Engineering
-- Operations
-- Sales
-- IT
+- Shared
 
-The IT department is responsible for managing the company's infrastructure, identity services, endpoint security, monitoring, automation, and cloud integration.
+Access is controlled through Active Directory security groups, SMB permissions, and NTFS permissions.
 
-## 4. Business Requirements
-The IT infrastructure must provide:
+### EHSL-CLIENT01
 
-- Centralized user authentication.
-- Secure file sharing.
-- Centralized identity management.
-- Secure remote administration.
-- Endpoint protection for corporate devices.
-- Network segmentation.
-- Security monitoring and logging.
-- Backup and recovery capabilities.
-- Internal web services.
-- Cloud identity integration.
-- Automated administrative tasks.
-- Compliance with security best practices.
+EHSL-CLIENT01 represents a managed enterprise Windows workstation.
 
+It is:
 
-## 5. Security Principles
-The infrastructure will follow the following security principles:
+- joined to `ehsl.internal`;
+- located in the Standard workstation OU;
+- centrally managed through Group Policy;
+- configured as a Windows Event Forwarding source;
+- protected using Windows LAPS;
+- protected using BitLocker with TPM and AD DS recovery escrow.
 
-## Least Privilege
-Users and administrators will only receive the permissions required to perform their tasks.
+---
 
-## Defense in Depth
-Multiple layers of security controls will be implemented to reduce the impact of security incidents.
+## 8. Centralized Security Management
 
-## Secure by Default
-Systems will be deployed using secure configurations whenever possible.
+The current architecture supports centralized security controls through Active Directory and Group Policy.
 
-## Zero Trust
-Access requests will always be verified regardless of their origin.
+Implemented controls include:
 
-## Logging First
-Critical systems and services will generate logs that can be monitored and analyzed.
+- workstation security baseline;
+- member server security baseline;
+- domain controller security baseline;
+- Advanced Audit Policy;
+- process creation auditing;
+- Windows Event Forwarding;
+- Windows LAPS;
+- BitLocker policy for workstations.
 
-## Automation
-Administrative tasks should be automated whenever possible to reduce human error and improve consistency.
+Additional endpoint hardening, including Windows Firewall and Microsoft Defender configuration, remains part of the next implementation stages.
 
-## 6. High-Level Architecture
-The infrastructure will be based on a hybrid Windows and Linux environment running on VirtualBox.
+---
 
-The network will be segmented into different logical zones:
+## 9. Security Monitoring Architecture
 
-- Management Network
-- Server Network
-- Client Network
-- DMZ
-- Cloud Services
+EHSL-DC01 operates as the Windows Event Collector.
 
+EHSL-FS01 and EHSL-CLIENT01 forward selected Windows Security events to the collector using source-initiated Windows Event Forwarding.
 
-## 7. Initial Infrastructure
-| Server | Operating System | Purpose |
-|----------|-----------------|---------|
-| EHSL-DC01 | Windows Server 2022 | Active Directory, DNS, Group Policy |
-| EHSL-LNX01 | Ubuntu Server | Linux services and automation |
-| WIN11-CLIENT01 | Windows 11 | Corporate workstation |
+The centralized event pipeline currently supports security events related to:
 
-## 8. Initial Decisions
-| Decision | Justification |
-|------------|---------------|
-| VirtualBox | Lightweight, stable and suitable for the available hardware. |
-| Windows Server 2022 | Modern enterprise operating system with long-term support and extensive documentation. |
-| Ubuntu Server | Widely used in enterprise environments and ideal for learning Linux administration. |
-| Hybrid Infrastructure | Reflects the reality of most enterprise environments. |
-| Microsoft-focused | Aligns with current career goals and enterprise demand. |
-| Domain: ad.ehsl.lab | Modern naming convention that avoids issues associated with the .local domain. |
-| Active Directory in Server Network | Standard enterprise architecture and easier future scalability. |
+- authentication;
+- account activity;
+- privilege use;
+- process creation;
+- Kerberos;
+- audit policy;
+- file access.
 
-## 9. Personal Learning Objectives
-The main objective of this project is to transition from a Security Operations profile towards Security Engineering and Infrastructure Security.
+This provides a native Windows telemetry layer that can later feed additional monitoring or SIEM technologies.
 
-Through this project I aim to:
+---
 
-- Improve Windows Server administration.
-- Master Active Directory.
-- Gain hands-on Linux administration experience.
-- Improve networking knowledge.
-- Learn PowerShell automation.
-- Improve Python scripting for infrastructure and security.
-- Develop Bash scripting skills.
-- Learn Microsoft Entra ID and Microsoft 365 administration.
-- Deploy and secure enterprise services.
-- Implement security controls following industry best practices.
-- Build a professional GitHub portfolio that demonstrates practical engineering skills.
+## 10. Architectural Decisions
 
-## Current Progress
+### Single Internal Subnet
 
-Phase 0 has been successfully completed.
+The current environment intentionally uses one internal subnet.
 
-The initial enterprise architecture has been documented and the first infrastructure component (EHSL-DC01) has been deployed and validated.
+The objective at this stage is to build and validate enterprise services and security controls before introducing additional network complexity.
 
-The project is now ready to begin identity services implementation through Active Directory.
+### Separate File Server
 
+File services are separated from the domain controller to model a more realistic enterprise role boundary and provide a dedicated platform for access-control testing.
 
+### WEC on the Domain Controller
+
+Windows Event Collector currently runs on EHSL-DC01.
+
+In a larger production environment, collection infrastructure would normally be separated according to scale, security, and availability requirements.
+
+Within EHSL, consolidation is an intentional resource-management decision.
+
+### No Linux Server in the Current Architecture
+
+Earlier design iterations considered a Linux server.
+
+No Linux VM is currently deployed, and Linux is therefore not part of the implemented EHSL architecture.
+
+Linux services may be introduced in the future only if they support a defined project requirement.
+
+---
+
+## 11. Architecture Evolution
+
+The initial design of EHSL was broader than the environment eventually implemented.
+
+Earlier planning included:
+
+- multiple internal network segments;
+- a Linux server;
+- a DMZ;
+- a different internal domain naming model;
+- additional infrastructure systems.
+
+During implementation, the architecture was simplified to prioritize realistic depth, security validation, and efficient use of the available host resources.
+
+The implemented domain is:
+
+`ehsl.internal`
+
+The implemented internal network is:
+
+`10.10.10.0/24`
+
+The current architecture should be treated as the source of truth for subsequent project phases.
+
+---
+
+## 12. Future Direction
+
+Potential future architecture work includes:
+
+- Windows Firewall hardening;
+- Microsoft Defender hardening;
+- additional PowerShell automation;
+- network segmentation;
+- Microsoft Entra ID integration;
+- Microsoft Intune;
+- Microsoft Defender for Endpoint;
+- Microsoft Sentinel;
+- additional hybrid identity and cloud security scenarios.
+
+Future technologies will be added to the architecture documentation only after implementation or clearly marked as planned.
+
+---
+
+## 13. Phase 0 Status
+
+**Status: Completed and reconciled with the implemented environment.**
+
+Phase 0 now defines the architecture used by the rest of the EHSL project:
+
+- Domain: `ehsl.internal`
+- Internal network: `10.10.10.0/24`
+- Domain Controller: EHSL-DC01
+- File Server: EHSL-FS01
+- Managed Workstation: EHSL-CLIENT01
+- Virtualization: Oracle VirtualBox
+- Internet access: VirtualBox NAT
+- Internal communication: VirtualBox Host-Only network
+
+This architecture is the baseline for all subsequent EHSL phases.
+'@ | Set-Content -Path ".\docs\phase-0\phase-0-architecture.md" -Encoding UTF8

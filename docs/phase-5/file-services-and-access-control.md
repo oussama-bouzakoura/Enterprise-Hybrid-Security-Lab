@@ -1,4 +1,4 @@
-# Phase 5 - File Services and Access Control
+﻿# Phase 5 - File Services and Access Control
 
 ## Objective
 
@@ -28,10 +28,10 @@ EHSL-FS01 is domain joined and uses the EHSL internal network for domain service
 
 ```text
 E:\Shares
-├── HR
-├── Finance
-├── Engineering
-└── Shared
+â”œâ”€â”€ HR
+â”œâ”€â”€ Finance
+â”œâ”€â”€ Engineering
+â””â”€â”€ Shared
 ```
 
 Published SMB shares:
@@ -51,11 +51,11 @@ EHSL uses the AGDLP model:
 
 ```text
 Accounts
-   ↓
+   â†“
 Global Groups
-   ↓
+   â†“
 Domain Local Groups
-   ↓
+   â†“
 Permissions
 ```
 
@@ -79,9 +79,9 @@ GG_IT_Admins
 Current relevant memberships:
 
 ```text
-john.smith   → GG_HR_Users
-sara.johnson → GG_Finance_Users
-alex.brown   → GG_Security_Users
+john.smith   â†’ GG_HR_Users
+sara.johnson â†’ GG_Finance_Users
+alex.brown   â†’ GG_Security_Users
 ```
 
 ---
@@ -107,9 +107,9 @@ DL_FS_Shared_RO
 Configured AGDLP mappings:
 
 ```text
-GG_HR_Users          → DL_FS_HR_RW
-GG_Finance_Users     → DL_FS_Finance_RW
-GG_Engineering_Users → DL_FS_Engineering_RW
+GG_HR_Users          â†’ DL_FS_HR_RW
+GG_Finance_Users     â†’ DL_FS_Finance_RW
+GG_Engineering_Users â†’ DL_FS_Engineering_RW
 ```
 
 Shared access:
@@ -120,7 +120,7 @@ GG_Finance_Users
 GG_Engineering_Users
 GG_Sales_Users
 GG_Security_Users
-        ↓
+        â†“
 DL_FS_Shared_RW
 ```
 
@@ -135,8 +135,8 @@ Administrative privileges do not automatically imply business-data access.
 Share-level permissions are configured as:
 
 ```text
-Authenticated Users → Change
-Administrators      → Full Control
+Authenticated Users â†’ Change
+Administrators      â†’ Full Control
 ```
 
 The effective authorization decision is primarily enforced through NTFS permissions.
@@ -154,10 +154,10 @@ Inherited permissions were converted to explicit permissions before broad entrie
 The resulting authorization model is:
 
 ```text
-Administrators       → Full Control
-SYSTEM               → Full Control
-DL_FS_<Resource>_RW  → Modify
-DL_FS_<Resource>_RO  → Read & Execute
+Administrators       â†’ Full Control
+SYSTEM               â†’ Full Control
+DL_FS_<Resource>_RW  â†’ Modify
+DL_FS_<Resource>_RO  â†’ Read & Execute
 ```
 
 Broad entries removed include:
@@ -241,11 +241,11 @@ Example validated workflow:
 
 ```text
 john.smith
-    ↓
+    â†“
 \\EHSL-FS01\HR
-    ↓
+    â†“
 File create / modify / delete
-    ↓
+    â†“
 Security Event 4663 on EHSL-FS01
 ```
 
@@ -277,6 +277,62 @@ This phase establishes several enterprise security principles:
 
 ---
 
+
+---
+
+## Centralized Security Monitoring Integration
+
+The file-access auditing implemented in this phase is integrated with the centralized Windows security-monitoring architecture introduced in Phase 6.
+
+EHSL-FS01 generates Windows Security events for audited access to protected business resources.
+
+The primary file-access event used during validation is:
+
+`Event ID 4663 - An attempt was made to access an object`
+
+The monitoring path is:
+
+`Domain user`
+
+↓
+
+`SMB business share on EHSL-FS01`
+
+↓
+
+`NTFS access and SACL auditing`
+
+↓
+
+`EHSL-FS01 Security log`
+
+↓
+
+`Windows Event Forwarding`
+
+↓
+
+`EHSL-DC01 ForwardedEvents`
+
+End-to-end validation was performed using access to the HR share.
+
+A domain user accessed:
+
+`\\EHSL-FS01\HR`
+
+The access generated Event ID `4663` on EHSL-FS01.
+
+The corresponding event was subsequently received centrally in:
+
+`ForwardedEvents`
+
+on EHSL-DC01.
+
+This confirms that the Phase 5 access-control architecture is not limited to local enforcement and auditing. Relevant file-access telemetry can also be consumed by the centralized monitoring layer.
+
+The complete WEF architecture, event selection, troubleshooting history, and centralized validation are documented in:
+
+`docs/phase-6/security-monitoring.md`
 ## Phase Status
 
 **Completed**
